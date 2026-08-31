@@ -17,9 +17,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sheetsLoading, setSheetsLoading] = useState(false);
-  const [sheetsError, setSheetsError] = useState<string | null>(null);
-  const [sheetsUrl, setSheetsUrl] = useState<string | null>(null);
   const [scans, setScans] = useState<ScanListItem[]>([]);
   const [scansLoading, setScansLoading] = useState(true);
   const [selectedScanId, setSelectedScanId] = useState<string | null>(null);
@@ -87,8 +84,6 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setResult(null);
-    setSheetsUrl(null);
-    setSheetsError(null);
     setSelectedScanId(null);
 
     try {
@@ -129,8 +124,6 @@ export default function Home() {
   async function handleSelectScan(scan: ScanListItem) {
     setHistoryLoadingId(scan.id);
     setError(null);
-    setSheetsUrl(null);
-    setSheetsError(null);
 
     try {
       const res = await fetch(`/api/scans/${scan.id}`);
@@ -202,33 +195,6 @@ export default function Home() {
     link.click();
 
     URL.revokeObjectURL(url);
-  }
-
-  async function handleSheetsExport() {
-    if (!result) return;
-    setSheetsLoading(true);
-    setSheetsError(null);
-    setSheetsUrl(null);
-
-    try {
-      const res = await fetch('/api/export-sheets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ result }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setSheetsError(data.error || 'Export failed');
-      } else {
-        setSheetsUrl(data.url);
-      }
-    } catch (err) {
-      setSheetsError((err as Error).message);
-    } finally {
-      setSheetsLoading(false);
-    }
   }
 
   return (
@@ -313,11 +279,7 @@ export default function Home() {
             resolvedKeys={resolvedKeys}
             togglingKey={togglingKey}
             onToggleResolved={handleToggleResolved}
-            sheetsLoading={sheetsLoading}
-            sheetsError={sheetsError}
-            sheetsUrl={sheetsUrl}
             onCsvDownload={handleCsvDownload}
-            onSheetsExport={handleSheetsExport}
           />
         )}
       </div>

@@ -2,7 +2,20 @@ import { glob } from 'glob';
 import fs from 'fs/promises';
 import path from 'path';
 
-const TARGET_EXTENSIONS = ['js', 'jsx', 'ts', 'tsx', 'php', 'py'];
+const TARGET_EXTENSIONS = [
+  'js',
+  'jsx',
+  'ts',
+  'tsx',
+  'php',
+  'py',
+  // Drupal custom code
+  'module',
+  'theme',
+  'install',
+  'inc',
+  'twig',
+];
 
 // Directory names to skip entirely — checked against every segment
 // of the path, so node_modules nested anywhere gets excluded

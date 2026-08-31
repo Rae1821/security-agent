@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Confidence, Finding, Severity } from '@/src/lib/analyzer';
 import { findingKey, isFindingResolved } from '@/src/lib/findingStatus';
 import { ScanResult } from '@/src/lib/report';
-import { Check, Download, ExternalLink, Loader2 } from 'lucide-react';
+import { Check, Download, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type StatusFilter = 'pending' | 'fixed' | 'all';
@@ -204,11 +204,7 @@ interface ScanResultsPanelProps {
   resolvedKeys: Set<string>;
   togglingKey: string | null;
   onToggleResolved: (findingKey: string, resolved: boolean) => void;
-  sheetsLoading: boolean;
-  sheetsError: string | null;
-  sheetsUrl: string | null;
   onCsvDownload: () => void;
-  onSheetsExport: () => void;
 }
 
 export function ScanResultsPanel({
@@ -216,11 +212,7 @@ export function ScanResultsPanel({
   resolvedKeys,
   togglingKey,
   onToggleResolved,
-  sheetsLoading,
-  sheetsError,
-  sheetsUrl,
   onCsvDownload,
-  onSheetsExport,
 }: ScanResultsPanelProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('pending');
 
@@ -284,31 +276,10 @@ export function ScanResultsPanel({
             <Download data-icon="inline-start" />
             Download CSV
           </Button>
-          <Button size="sm" onClick={onSheetsExport} disabled={sheetsLoading}>
-            {sheetsLoading ? (
-              <Loader2 data-icon="inline-start" className="animate-spin" />
-            ) : (
-              <ExternalLink data-icon="inline-start" />
-            )}
-            {sheetsLoading ? 'Exporting...' : 'Export to Google Sheets'}
-          </Button>
-          {sheetsUrl && (
-            <Button variant="link" size="sm" asChild>
-              <a href={sheetsUrl} target="_blank" rel="noopener noreferrer">
-                Open sheet
-              </a>
-            </Button>
-          )}
         </CardAction>
       </CardHeader>
 
       <CardContent>
-        {sheetsError && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{sheetsError}</AlertDescription>
-          </Alert>
-        )}
-
         {result.findings.length === 0 ? (
           <Alert>
             <AlertDescription>
