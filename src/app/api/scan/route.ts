@@ -2,22 +2,42 @@ import { analyzeWithPersistence, saveScan } from '@/src/lib/scanDb';
 import { isMongoConfigured } from '@/src/lib/mongodb';
 import { readAllSourceFiles } from '@/src/lib/fileReader';
 import { buildResult } from '@/src/lib/report';
+import { unzipToTmp } from '@/src/lib/unzip';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 
 export const maxDuration = 300;
 
-export async function POST(request: NextRequest) {
-  try {
-    const { targetDir } = await request.json();
+async function resolveTargetDir(request: NextRequest): Promise<string> {
+  const contentType = request.headers.get('content-type') ?? '';
 
-    if (!targetDir || typeof targetDir !== 'string') {
-      return NextResponse.json(
-        { error: 'targetDir is required and must be a string' },
-        { status: 400 },
-      );
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await request.formData();
+    const file = formData.get('file');
+
+    if (!file || !(file instanceof File)) {
+      throw new Error('file is required when uploading a zip archive');
     }
 
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      throw new Error('Uploaded file must be a .zip archive');
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    return unzipToTmp(buffer, file.name);
+  }
+
+  const { targetDir } = await request.json();
+
+  if (!targetDir || typeof targetDir !== 'string') {
+    throw new Error('targetDir is required and must be a string');
+  }
+
+  return path.resolve(targetDir);
+}
+
+export async function POST(request: NextRequest) {
+  try {
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
         { error: 'ANTHROPIC_API_KEY not configured on server' },
@@ -29,7 +49,15 @@ export async function POST(request: NextRequest) {
       console.warn('MONGODB_URI not configured — scans will not be cached');
     }
 
-    const resolvedPath = path.resolve(targetDir);
+    let resolvedPath: string;
+    try {
+      resolvedPath = await resolveTargetDir(request);
+    } catch (err) {
+      return NextResponse.json(
+        { error: (err as Error).message },
+        { status: 400 },
+      );
+    }
 
     const files = await readAllSourceFiles(resolvedPath);
 

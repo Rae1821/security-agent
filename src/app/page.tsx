@@ -13,6 +13,7 @@ import { ScanResultsPanel } from '@/components/scan-results-panel';
 
 export default function Home() {
   const [targetDir, setTargetDir] = useState('');
+  const [zipFile, setZipFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,11 +92,22 @@ export default function Home() {
     setSelectedScanId(null);
 
     try {
-      const res = await fetch('/api/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetDir }),
-      });
+      let res: Response;
+
+      if (zipFile) {
+        const formData = new FormData();
+        formData.append('file', zipFile);
+        res = await fetch('/api/scan', {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetDir }),
+        });
+      }
 
       const data = await res.json();
 
@@ -239,21 +251,45 @@ export default function Home() {
           </p>
         </div>
 
-        <form onSubmit={handleScan} className='flex gap-3'>
-          <Input
-            type='text'
-            value={targetDir}
-            onChange={(e) => setTargetDir(e.target.value)}
-            placeholder='/absolute/path/to/your/repo'
-            className='flex-1'
-            required
-          />
-          <Button type='submit' disabled={loading}>
-            {loading && (
-              <Loader2 data-icon='inline-start' className='animate-spin' />
+        <form onSubmit={handleScan} className='flex flex-col gap-3'>
+          <div className='flex gap-3'>
+            <Input
+              type='text'
+              value={targetDir}
+              onChange={(e) => {
+                setTargetDir(e.target.value);
+                if (e.target.value) setZipFile(null);
+              }}
+              placeholder='/absolute/path/to/your/repo'
+              className='flex-1'
+              disabled={!!zipFile}
+              required={!zipFile}
+            />
+            <Button type='submit' disabled={loading || (!targetDir && !zipFile)}>
+              {loading && (
+                <Loader2 data-icon='inline-start' className='animate-spin' />
+              )}
+              {loading ? 'Scanning...' : 'Scan'}
+            </Button>
+          </div>
+          <div className='flex items-center gap-3'>
+            <span className='text-sm text-muted-foreground'>or</span>
+            <Input
+              type='file'
+              accept='.zip,application/zip'
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setZipFile(file);
+                if (file) setTargetDir('');
+              }}
+              className='flex-1'
+            />
+            {zipFile && (
+              <span className='truncate text-sm text-muted-foreground'>
+                {zipFile.name}
+              </span>
             )}
-            {loading ? 'Scanning...' : 'Scan'}
-          </Button>
+          </div>
         </form>
 
         {loading && (
