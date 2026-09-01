@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     if (loadedFromScanHistory && scanId) {
       result.meta.id = scanId;
-    } else if (!loadedFromScanHistory) {
+    } else if (!loadedFromScanHistory && isMongoConfigured()) {
       const scanId = await saveScan(result, stats);
       result.meta.id = scanId;
     }

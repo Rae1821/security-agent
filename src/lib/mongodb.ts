@@ -1,12 +1,15 @@
 import { Db, MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI;
-
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
+function getMongoUri(): string | undefined {
+  return process.env.MONGODB_URI;
+}
+
 function getClientPromise(): Promise<MongoClient> {
+  const uri = getMongoUri();
   if (!uri) {
     throw new Error('MONGODB_URI is not configured');
   }
@@ -42,7 +45,7 @@ async function ensureIndexes(db: Db): Promise<void> {
 }
 
 export function isMongoConfigured(): boolean {
-  return Boolean(process.env.MONGODB_URI);
+  return Boolean(getMongoUri());
 }
 
 export async function getDb(): Promise<Db> {
