@@ -6,7 +6,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { RemediationContent } from '@/components/remediation-content';
+import {
+  CopyCodeButton,
+  RemediationContent,
+} from '@/components/remediation-content';
 import { SeverityBadge } from '@/components/severity-badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +25,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Confidence, Finding, Severity } from '@/src/lib/analyzer';
 import { findingKey, isFindingResolved } from '@/src/lib/findingStatus';
+import { buildFixPrompt } from '@/src/lib/fixPrompt';
 import { ScanResult } from '@/src/lib/report';
 import { Check, Download, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -62,6 +66,24 @@ function FindingDetail({
       ) : (
         children
       )}
+    </div>
+  );
+}
+
+function FixPrompt({ finding }: { finding: Finding }) {
+  const prompt = buildFixPrompt(finding);
+
+  return (
+    <div className="overflow-hidden rounded-lg border bg-muted/40">
+      <div className="flex items-center justify-between gap-2 border-b px-3 py-1.5">
+        <span className="text-xs text-muted-foreground">
+          Copy and paste into your AI coding assistant
+        </span>
+        <CopyCodeButton code={prompt} />
+      </div>
+      <pre className="max-h-64 overflow-auto p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+        {prompt}
+      </pre>
     </div>
   );
 }
@@ -187,6 +209,9 @@ function FindingsList({
                   </FindingDetail>
                   <FindingDetail label="Suggested fix" prose={false}>
                     <RemediationContent content={finding.remediation} />
+                  </FindingDetail>
+                  <FindingDetail label="AI fix prompt" prose={false}>
+                    <FixPrompt finding={finding} />
                   </FindingDetail>
                 </div>
               </AccordionContent>

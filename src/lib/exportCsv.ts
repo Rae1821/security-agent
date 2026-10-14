@@ -1,3 +1,4 @@
+import { buildFixPrompt } from './fixPrompt';
 import { ScanResult } from './report';
 
 // Escape a cell value for CSV: wrap in quotes, escape internal quotes
@@ -16,6 +17,7 @@ const HEADERS = [
   'Explanation',
   'Exploit Scenario',
   'Remediation',
+  'AI Fix Prompt',
 ];
 
 export function findingsToCsv(result: ScanResult): string {
@@ -32,6 +34,7 @@ export function findingsToCsv(result: ScanResult): string {
       escapeCell(f.explanation),
       escapeCell(f.exploit_scenario),
       escapeCell(f.remediation),
+      escapeCell(buildFixPrompt(f)),
     ];
     rows.push(row.join(','));
   }

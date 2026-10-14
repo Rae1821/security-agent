@@ -55,7 +55,7 @@ export function parseRemediation(text: string): RemediationSegment[] {
   return segments;
 }
 
-function CopyCodeButton({ code }: { code: string }) {
+export function CopyCodeButton({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
